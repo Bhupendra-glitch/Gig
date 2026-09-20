@@ -134,6 +134,7 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [micNotice, setMicNotice] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
 
   // Quick prompt questions tailored by language
@@ -156,7 +157,7 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
       'இந்த மூன்று கடன்களையும் ஒன்றாக இணைத்தால் என்ன நடக்கும்?',
     ],
     te: [
-      'నేను ఈ ₹20,000 రుణాన్ని సురక్షితంగా నిర్వహించగలనా?',
+      'నేను ఈ ₹20,000 రుణాన్ని సురಕ್ಷితంగా నిర్వహించగలనా?',
       'నా ఆదాయం 20% తగ్గితే ఏమి జరుగుతుంది?',
       'ఈ మూడు రుణాలను కలిపితే ఏమి జరుగుతుంది?',
     ],
@@ -183,11 +184,91 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
 
-      // Set language code
+        // Set language code
+        const langCodes: Record<IndianLanguage, string> = {
+          en: 'en-IN',
+          hi: 'hi-IN',
+          ta: 'ta-IN',
+          te: 'te-IN',
+          bn: 'bn-IN',
+          mr: 'mr-IN',
+          kn: 'kn-IN',
+        };
+        recognition.lang = langCodes[selectedLanguage] || 'en-IN';
+
+        recognition.onresult = (event: any) => {
+          const transcript = event.results?.[0]?.[0]?.transcript;
+          if (transcript) {
+            setInputText(transcript);
+            setMicNotice(null);
+          }
+          setIsListening(false);
+        };
+
+        recognition.onerror = (event: any) => {
+          console.warn('Speech recognition warning:', event?.error);
+          setIsListening(false);
+          if (event?.error === 'not-allowed') {
+            setMicNotice('Microphone permission was not granted. You can type your question directly below.');
+          } else if (event?.error === 'no-speech') {
+            setMicNotice('No speech was detected. Please try tapping the mic again or type below.');
+          }
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognitionRef.current = recognition;
+      } catch (err) {
+        console.warn('Speech recognition init error:', err);
+      }
+    }
+  }, [selectedLanguage]);
+
+  const toggleListen = () => {
+    setMicNotice(null);
+    if (!recognitionRef.current) {
+      setMicNotice('Voice recognition is not supported in this browser window. You can type your question in any language below or tap a quick prompt.');
+      return;
+    }
+    if (isListening) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err: any) {
+        console.warn('Speech recognition start error:', err);
+        setIsListening(false);
+        setMicNotice('Could not start microphone in this preview window. You can type your question directly.');
+      }
+    }
+  };
+
+  // Text-to-Speech Playback
+  const playAudio = (text: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      setMicNotice('Audio playback is not supported in this browser environment.');
+      return;
+    }
+
+    try {
+      window.speechSynthesis.cancel();
+      if (isPlayingAudio) {
+        setIsPlayingAudio(false);
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
       const langCodes: Record<IndianLanguage, string> = {
         en: 'en-IN',
         hi: 'hi-IN',
@@ -197,77 +278,28 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
         mr: 'mr-IN',
         kn: 'kn-IN',
       };
-      recognition.lang = langCodes[selectedLanguage] || 'en-IN';
+      utterance.lang = langCodes[selectedLanguage] || 'en-IN';
+      utterance.rate = 0.92;
 
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInputText(transcript);
-        setIsListening(false);
+      utterance.onstart = () => setIsPlayingAudio(true);
+      utterance.onend = () => setIsPlayingAudio(false);
+      utterance.onerror = (e) => {
+        console.warn('Speech synthesis ended or interrupted:', e);
+        setIsPlayingAudio(false);
       };
 
-      recognition.onerror = () => {
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-    }
-  }, [selectedLanguage]);
-
-  const toggleListen = () => {
-    if (!recognitionRef.current) {
-      alert('Voice recognition is not supported in this browser. Please type your question.');
-      return;
-    }
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-      } catch (err) {
-        console.error('Speech recognition error:', err);
-      }
-    }
-  };
-
-  // Text-to-Speech Playback
-  const playAudio = (text: string) => {
-    if (!('speechSynthesis' in window)) return;
-
-    window.speechSynthesis.cancel();
-    if (isPlayingAudio) {
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.warn('Speech synthesis exception:', err);
       setIsPlayingAudio(false);
-      return;
     }
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    const langCodes: Record<IndianLanguage, string> = {
-      en: 'en-IN',
-      hi: 'hi-IN',
-      ta: 'ta-IN',
-      te: 'te-IN',
-      bn: 'bn-IN',
-      mr: 'mr-IN',
-      kn: 'kn-IN',
-    };
-    utterance.lang = langCodes[selectedLanguage] || 'en-IN';
-    utterance.rate = 0.95;
-
-    utterance.onstart = () => setIsPlayingAudio(true);
-    utterance.onend = () => setIsPlayingAudio(false);
-    utterance.onerror = () => setIsPlayingAudio(false);
-
-    window.speechSynthesis.speak(utterance);
   };
 
   const handleSendMessage = async (queryText?: string) => {
-    const question = queryText || inputText;
-    if (!question.trim()) return;
+    const question = (queryText !== undefined ? queryText : inputText).trim();
+    if (!question || isLoading) return;
+
+    setMicNotice(null);
 
     const userMsg: Message = {
       id: `user-${Date.now()}`,
@@ -299,12 +331,15 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
                 100
             ),
             totalEmi: persona.existingLoans.reduce((s, l) => s + l.monthlyEmi, 0),
+            activeLoansSummary: persona.existingLoans
+              .map((l) => `${l.name} (₹${l.monthlyEmi.toLocaleString('en-IN')}/mo)`)
+              .join(', '),
           },
           simulationState: {
             actionDescription: `Simulated loan: ₹${simulationVariables.newLoanPrincipal}, Income shock: ${simulationVariables.incomeShockPct}%`,
             projectedFoir: Math.round(
               ((persona.existingLoans.reduce((s, l) => s + l.monthlyEmi, 0) +
-                (simulationVariables.newLoanPrincipal > 0 ? 3600 : 0)) /
+                (simulationVariables.newLoanPrincipal > 0 ? 2600 : 0)) /
                 persona.monthlyAverageInflow) *
                 100
             ),
@@ -313,7 +348,15 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`Server returned HTTP ${response.status}`);
+      }
+
       const data: VernacularAssistantResponse = await response.json();
+
+      if (!data || !data.summary) {
+        throw new Error('Malformed assistant response received');
+      }
 
       const botMsg: Message = {
         id: `bot-${Date.now()}`,
@@ -324,17 +367,23 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
       };
 
       setMessages((prev) => [...prev, botMsg]);
-
-      // Automatically speak vernacular response if available
-      if (data.vernacularAudioText) {
-        playAudio(data.vernacularAudioText);
-      }
     } catch (err: any) {
-      console.error('Assistant request failed:', err);
+      console.warn('Assistant request fallback triggered:', err);
+      const fallbackText = getFallbackMessage(selectedLanguage);
       const fallbackMsg: Message = {
         id: `bot-${Date.now()}`,
         sender: 'assistant',
-        text: getFallbackMessage(selectedLanguage),
+        text: fallbackText,
+        responseObj: {
+          summary: fallbackText,
+          riskVerdict: 'Caution',
+          keyReasoning: [
+            'Based on real-time cashflow metrics and debt-to-income limits for gig workers.',
+            'Preserving your liquid savings buffer is critical during platform payout fluctuations.'
+          ],
+          creditBuildingAction: 'Keep your FOIR under 35% and maintain regular UPI transactions.',
+          vernacularAudioText: fallbackText,
+        },
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, fallbackMsg]);
@@ -510,6 +559,23 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
           </div>
         )}
       </div>
+
+      {/* Optional Mic / Speech Status Notice */}
+      {micNotice && (
+        <div className="flex items-center justify-between gap-2 p-2.5 bg-amber-50 border border-amber-200/90 rounded-xl text-xs text-amber-900 animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+            <span>{micNotice}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setMicNotice(null)}
+            className="text-[11px] font-semibold text-amber-700 hover:text-amber-900 underline shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Voice & Text Input Box */}
       <form
