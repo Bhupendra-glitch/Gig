@@ -11,17 +11,21 @@ import {
   TrendingUp,
   Percent,
 } from 'lucide-react';
-import { CashflowScoreAnalysis, GigPersona } from '../types';
+import { CashflowScoreAnalysis, GigPersona, IndianLanguage } from '../types';
+import { getTranslations } from '../utils/translations';
 
 interface B2BUnderwriterViewProps {
   persona: GigPersona;
   analysis: CashflowScoreAnalysis;
+  language?: IndianLanguage;
 }
 
 export const B2BUnderwriterView: React.FC<B2BUnderwriterViewProps> = ({
   persona,
   analysis,
+  language = 'en',
 }) => {
+  const t = getTranslations(language);
   const existingEmi = persona.existingLoans.reduce((sum, l) => sum + l.monthlyEmi, 0);
   const netMonthlySurplus = persona.monthlyAverageInflow - persona.monthlyEssentialBurn - existingEmi;
   const dscr = (netMonthlySurplus + existingEmi) / Math.max(1, existingEmi);

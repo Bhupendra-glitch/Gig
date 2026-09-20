@@ -22,6 +22,7 @@ import {
   generateCashflowForecast,
   runMonteCarloSimulation,
 } from './utils/financialCalculations';
+import { getTranslations } from './utils/translations';
 import {
   TrendingUp,
   Layers,
@@ -43,7 +44,28 @@ const defaultTwinVariables: IncomeTwinVariables = {
 
 export default function App() {
   const [selectedPersona, setSelectedPersona] = useState<GigPersona>(GIG_PERSONAS[0]);
-  const [selectedLanguage, setSelectedLanguage] = useState<IndianLanguage>('en');
+  const [selectedLanguage, setSelectedLanguage] = useState<IndianLanguage>(() => {
+    try {
+      const saved = localStorage.getItem('gigcred_lang');
+      if (saved && ['en', 'hi', 'ta', 'te', 'bn', 'mr', 'kn'].includes(saved)) {
+        return saved as IndianLanguage;
+      }
+    } catch {
+      // fallback
+    }
+    return 'en';
+  });
+
+  const handleLanguageChange = (lang: IndianLanguage) => {
+    setSelectedLanguage(lang);
+    try {
+      localStorage.setItem('gigcred_lang', lang);
+    } catch {
+      // ignore
+    }
+  };
+
+  const t = getTranslations(selectedLanguage);
   const [activeTab, setActiveTab] = useState<
     'overview' | 'consolidate' | 'predatory' | 'assistant' | 'b2b'
   >('overview');
@@ -128,7 +150,7 @@ export default function App() {
         selectedPersona={selectedPersona}
         onSelectPersona={handleSelectPersona}
         selectedLanguage={selectedLanguage}
-        onSelectLanguage={setSelectedLanguage}
+        onSelectLanguage={handleLanguageChange}
         activeTab={activeTab === 'b2b' ? 'b2b' : 'worker'}
         onTabChange={(tab) => {
           if (tab === 'b2b') {
@@ -153,7 +175,7 @@ export default function App() {
               }`}
             >
               <TrendingUp className="w-3.5 h-3.5" />
-              <span>Cashflow &amp; Income Twin</span>
+              <span>{t.tabOverview}</span>
               {hasSimulatedChanges && (
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               )}
@@ -168,7 +190,7 @@ export default function App() {
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
-              <span>Debt Consolidator</span>
+              <span>{t.tabConsolidate}</span>
               <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
                 {currentLoans.length}
               </span>
@@ -183,7 +205,7 @@ export default function App() {
               }`}
             >
               <ShieldAlert className="w-3.5 h-3.5" />
-              <span>Predatory Loan Detector</span>
+              <span>{t.tabPredatory}</span>
             </button>
 
             <button
@@ -195,7 +217,7 @@ export default function App() {
               }`}
             >
               <Bot className="w-3.5 h-3.5" />
-              <span>Vernacular AI Voice Assistant</span>
+              <span>{t.tabAssistant}</span>
             </button>
 
             <button
@@ -207,7 +229,7 @@ export default function App() {
               }`}
             >
               <Building2 className="w-3.5 h-3.5" />
-              <span>Institutional Underwriting</span>
+              <span>{t.tabB2B}</span>
             </button>
           </div>
         </div>
@@ -223,6 +245,7 @@ export default function App() {
               analysis={cashflowAnalysis}
               persona={selectedPersona}
               isSimulated={hasSimulatedChanges}
+              language={selectedLanguage}
             />
 
             {/* 2. Interactive Digital Simulation Sandbox: The Income Twin */}
@@ -232,6 +255,7 @@ export default function App() {
               onUpdateVariables={setSimulationVariables}
               monteCarloResult={monteCarloResult}
               onReset={() => setSimulationVariables(defaultTwinVariables)}
+              language={selectedLanguage}
             />
 
             {/* 3. Forward-Looking 30-, 60-, 90-Day Cash-Flow Forecast */}
@@ -240,12 +264,14 @@ export default function App() {
               timeframe={timeframe}
               onTimeframeChange={setTimeframe}
               hasSimulatedChanges={hasSimulatedChanges}
+              language={selectedLanguage}
             />
 
             {/* 4. Extracted UPI and Bank Ledger */}
             <TransactionHistory
               transactions={transactions}
               statementFileName={selectedPersona.statementFileName}
+              language={selectedLanguage}
             />
           </div>
         )}
@@ -258,6 +284,7 @@ export default function App() {
               loans={currentLoans}
               onUpdateLoans={handleUpdateLoans}
               onApplyConsolidationToTwin={handleApplyConsolidationToTwin}
+              language={selectedLanguage}
             />
           </div>
         )}
@@ -265,7 +292,7 @@ export default function App() {
         {/* TAB 3: PREDATORY LOAN DETECTOR */}
         {activeTab === 'predatory' && (
           <div className="animate-in fade-in duration-150">
-            <PredatoryLoanDetector />
+            <PredatoryLoanDetector language={selectedLanguage} />
           </div>
         )}
 
@@ -275,7 +302,7 @@ export default function App() {
             <VernacularAssistant
               persona={selectedPersona}
               selectedLanguage={selectedLanguage}
-              onLanguageChange={setSelectedLanguage}
+              onLanguageChange={handleLanguageChange}
               simulationVariables={simulationVariables}
               currentCashflowScore={cashflowAnalysis.score}
             />
@@ -288,6 +315,7 @@ export default function App() {
             <B2BUnderwriterView
               persona={selectedPersona}
               analysis={cashflowAnalysis}
+              language={selectedLanguage}
             />
           </div>
         )}

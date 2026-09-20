@@ -12,9 +12,17 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { analyzeLoanOffer } from '../utils/financialCalculations';
-import { PredatoryCheckResult } from '../types';
+import { IndianLanguage, PredatoryCheckResult } from '../types';
+import { getTranslations } from '../utils/translations';
 
-export const PredatoryLoanDetector: React.FC = () => {
+interface PredatoryLoanDetectorProps {
+  language?: IndianLanguage;
+}
+
+export const PredatoryLoanDetector: React.FC<PredatoryLoanDetectorProps> = ({
+  language = 'en',
+}) => {
+  const t = getTranslations(language);
   const [principal, setPrincipal] = useState<number>(25000);
   const [statedRate, setStatedRate] = useState<number>(24);
   const [rateType, setRateType] = useState<'flat' | 'reducing'>('flat');
@@ -62,10 +70,10 @@ export const PredatoryLoanDetector: React.FC = () => {
             </span>
             <div>
               <h3 className="text-base font-bold text-slate-900 font-display">
-                Loan Stress Simulator &amp; Predatory Loan Detector
+                {t.predatoryTitle}
               </h3>
               <p className="text-xs text-slate-500">
-                Audit loan offers before borrowing. Exposes flat-rate deceptions, upfront fee gouging, and recovery traps.
+                {t.predatorySubtitle}
               </p>
             </div>
           </div>

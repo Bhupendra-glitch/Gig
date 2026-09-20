@@ -7,13 +7,15 @@ import {
   ChevronRight,
   Info,
 } from 'lucide-react';
-import { ForecastPoint } from '../types';
+import { ForecastPoint, IndianLanguage } from '../types';
+import { getTranslations } from '../utils/translations';
 
 interface ForecastChartsProps {
   points: ForecastPoint[];
   timeframe: 30 | 60 | 90;
   onTimeframeChange: (days: 30 | 60 | 90) => void;
   hasSimulatedChanges?: boolean;
+  language?: IndianLanguage;
 }
 
 export const ForecastCharts: React.FC<ForecastChartsProps> = ({
@@ -21,7 +23,9 @@ export const ForecastCharts: React.FC<ForecastChartsProps> = ({
   timeframe,
   onTimeframeChange,
   hasSimulatedChanges = false,
+  language = 'en',
 }) => {
+  const t = getTranslations(language);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   // Compute min and max balance for dynamic SVG chart scaling
@@ -84,11 +88,11 @@ export const ForecastCharts: React.FC<ForecastChartsProps> = ({
               <Calendar className="w-4 h-4" />
             </span>
             <h3 className="text-sm font-bold text-slate-900 font-display">
-              Forward-Looking Cashflow &amp; Income Forecast
+              {t.forecastTitle}
             </h3>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            Statistical regression forecasting factoring in gig seasonality, weekend incentives, and scheduled EMI auto-debits.
+            {t.forecastSubtitle}
           </p>
         </div>
 
@@ -100,7 +104,7 @@ export const ForecastCharts: React.FC<ForecastChartsProps> = ({
               timeframe === 30 ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            30 Days
+            30 {t.days}
           </button>
           <button
             onClick={() => onTimeframeChange(60)}
@@ -108,7 +112,7 @@ export const ForecastCharts: React.FC<ForecastChartsProps> = ({
               timeframe === 60 ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            60 Days
+            60 {t.days}
           </button>
           <button
             onClick={() => onTimeframeChange(90)}
@@ -116,7 +120,7 @@ export const ForecastCharts: React.FC<ForecastChartsProps> = ({
               timeframe === 90 ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            90 Days
+            90 {t.days}
           </button>
         </div>
       </div>

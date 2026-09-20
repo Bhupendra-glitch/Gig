@@ -12,19 +12,23 @@ import {
   Clock,
   Sparkles,
 } from 'lucide-react';
-import { CashflowScoreAnalysis, GigPersona } from '../types';
+import { CashflowScoreAnalysis, GigPersona, IndianLanguage } from '../types';
+import { getTranslations } from '../utils/translations';
 
 interface CashflowScorecardProps {
   analysis: CashflowScoreAnalysis;
   persona: GigPersona;
   isSimulated?: boolean;
+  language?: IndianLanguage;
 }
 
 export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
   analysis,
   persona,
   isSimulated = false,
+  language = 'en',
 }) => {
+  const t = getTranslations(language);
   const { score, tier, percentileAmongGigWorkers, shapDrivers, metrics } = analysis;
 
   // Normalized score percentage for gauge arc (300 to 900)
@@ -37,6 +41,7 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
       border: 'border-emerald-200',
       ring: 'ring-emerald-500',
       fill: '#059669',
+      label: t.primeWorker,
     },
     'Healthy / Near-Prime': {
       bg: 'bg-teal-50',
@@ -44,6 +49,7 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
       border: 'border-teal-200',
       ring: 'ring-teal-500',
       fill: '#0d9488',
+      label: t.nearPrime,
     },
     'Watchlist / Sensitive': {
       bg: 'bg-amber-50',
@@ -51,6 +57,7 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
       border: 'border-amber-200',
       ring: 'ring-amber-500',
       fill: '#d97706',
+      label: t.watchlist,
     },
     'High Risk / Overleveraged': {
       bg: 'bg-rose-50',
@@ -58,6 +65,7 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
       border: 'border-rose-200',
       ring: 'ring-rose-500',
       fill: '#e11d48',
+      label: t.highRisk,
     },
   }[tier];
 
@@ -99,12 +107,12 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
               <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                Cashflow Score
+                {t.scoreTitle}
               </span>
               <span className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-slate-900">
                 {score}
               </span>
-              <span className="text-[11px] font-medium text-slate-500">out of 900</span>
+              <span className="text-[11px] font-medium text-slate-500">{t.scoreRange}</span>
             </div>
           </div>
 
@@ -114,11 +122,11 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
               <span
                 className={`px-3 py-1 rounded-full text-xs font-bold border ${tierColors.bg} ${tierColors.text} ${tierColors.border}`}
               >
-                {tier}
+                {tierColors.label}
               </span>
               {isSimulated && (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200 animate-pulse">
-                  Simulated Scenario
+                  {t.simulatedScore}
                 </span>
               )}
             </div>
@@ -128,7 +136,7 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
             </h2>
 
             <p className="text-xs text-slate-500 max-w-sm leading-relaxed">
-              Calculated via UPI inflows, bank account turnover, and debt service coverage rather than static credit bureau files.
+              {t.brandTagline}
             </p>
 
             <div className="flex items-center justify-center sm:justify-start gap-3 pt-1 text-xs text-slate-600">
@@ -137,7 +145,7 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
                 Top {percentileAmongGigWorkers}%
               </span>
               <span className="text-slate-300">&bull;</span>
-              <span>Peer Group: Indian Gig Economy</span>
+              <span>{t.percentileRank}</span>
             </div>
           </div>
         </div>
@@ -146,7 +154,7 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
           {/* Monthly Inflow */}
           <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-            <span className="text-[11px] text-slate-500 font-medium block">Monthly Inflow</span>
+            <span className="text-[11px] text-slate-500 font-medium block">{t.monthlyInflow}</span>
             <span className="text-base font-bold text-slate-900 font-mono">
               ₹{metrics.monthlyInflow.toLocaleString('en-IN')}
             </span>
@@ -157,7 +165,7 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
 
           {/* Current FOIR */}
           <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-            <span className="text-[11px] text-slate-500 font-medium block">Current FOIR</span>
+            <span className="text-[11px] text-slate-500 font-medium block">{t.debtFOIR}</span>
             <span
               className={`text-base font-bold font-mono ${
                 metrics.foir <= 35 ? 'text-emerald-700' : metrics.foir <= 45 ? 'text-amber-700' : 'text-rose-700'
@@ -172,7 +180,7 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
 
           {/* Savings Runway */}
           <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-            <span className="text-[11px] text-slate-500 font-medium block">Liquid Runway</span>
+            <span className="text-[11px] text-slate-500 font-medium block">{t.liquidRunway}</span>
             <span
               className={`text-base font-bold font-mono ${
                 metrics.savingsRunwayDays >= 15 ? 'text-emerald-700' : 'text-amber-700'
@@ -187,7 +195,7 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
 
           {/* Repayment Bounce */}
           <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-            <span className="text-[11px] text-slate-500 font-medium block">NACH Bounces</span>
+            <span className="text-[11px] text-slate-500 font-medium block">{t.bounceRisk}</span>
             <span className="text-base font-bold text-emerald-700 font-mono">0.0%</span>
             <span className="text-[10px] text-emerald-600 block mt-0.5 font-medium">
               Pristine Auto-Debit
@@ -202,11 +210,11 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-600" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              Explainable AI: SHAP Factor Attribution Drivers
+              {t.shapDriversTitle}
             </h3>
           </div>
           <span className="text-[11px] text-slate-500">
-            Base Model Score: <span className="font-mono font-bold">650</span> &plusmn; SHAP Contributions
+            {t.shapDriversSubtitle}
           </span>
         </div>
 
@@ -245,8 +253,8 @@ export const CashflowScorecard: React.FC<CashflowScorecardProps> = ({
 
               {/* Benchmark and Remedial Action */}
               <div className="mt-2 pt-2 border-t border-slate-200/40 flex flex-wrap items-center justify-between gap-1 text-[10px]">
-                <span className="font-medium text-slate-500">{driver.benchmarkStr}</span>
-                <span className="text-emerald-800 font-semibold">{driver.remedyAction}</span>
+                <span className="font-medium text-slate-500">{t.targetBenchmark}: {driver.benchmarkStr}</span>
+                <span className="text-emerald-800 font-semibold">{t.actionToImprove}: {driver.remedyAction}</span>
               </div>
             </div>
           ))}

@@ -10,14 +10,16 @@ import {
   CheckCircle2,
   Percent,
 } from 'lucide-react';
-import { ConsolidationScenario, GigPersona, LoanItem } from '../types';
+import { ConsolidationScenario, GigPersona, IndianLanguage, LoanItem } from '../types';
 import { calculateConsolidationPlan } from '../utils/financialCalculations';
+import { getTranslations } from '../utils/translations';
 
 interface MultiLoanConsolidatorProps {
   persona: GigPersona;
   loans: LoanItem[];
   onUpdateLoans: (loans: LoanItem[]) => void;
   onApplyConsolidationToTwin: (scenario: ConsolidationScenario) => void;
+  language?: IndianLanguage;
 }
 
 export const MultiLoanConsolidator: React.FC<MultiLoanConsolidatorProps> = ({
@@ -25,7 +27,9 @@ export const MultiLoanConsolidator: React.FC<MultiLoanConsolidatorProps> = ({
   loans,
   onUpdateLoans,
   onApplyConsolidationToTwin,
+  language = 'en',
 }) => {
+  const t = getTranslations(language);
   const [targetApr, setTargetApr] = useState<number>(15.5);
   const [targetTenure, setTargetTenure] = useState<number>(18);
   const [isAddingNewLoan, setIsAddingNewLoan] = useState<boolean>(false);

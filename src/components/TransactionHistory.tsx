@@ -8,17 +8,21 @@ import {
   Calendar,
   Layers,
 } from 'lucide-react';
-import { Transaction } from '../types';
+import { IndianLanguage, Transaction } from '../types';
+import { getTranslations } from '../utils/translations';
 
 interface TransactionHistoryProps {
   transactions: Transaction[];
   statementFileName: string;
+  language?: IndianLanguage;
 }
 
 export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   transactions,
   statementFileName,
+  language = 'en',
 }) => {
+  const t = getTranslations(language);
   const [filterType, setFilterType] = useState<'all' | 'credit' | 'debit'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -37,7 +41,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-bold text-slate-900 font-display">
-              Extracted UPI &amp; Bank Ledger
+              {t.transactionsTitle}
             </h3>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
               Document AI Extracted
@@ -54,7 +58,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
             <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search transactions..."
+              placeholder={t.searchTxnPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
@@ -68,7 +72,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                 filterType === 'all' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-600'
               }`}
             >
-              All
+              {t.allFilter}
             </button>
             <button
               onClick={() => setFilterType('credit')}
@@ -76,7 +80,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                 filterType === 'credit' ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600'
               }`}
             >
-              Inflows
+              {t.payoutsFilter}
             </button>
             <button
               onClick={() => setFilterType('debit')}
@@ -84,7 +88,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                 filterType === 'debit' ? 'bg-white text-rose-700 shadow-2xs font-bold' : 'text-slate-600'
               }`}
             >
-              Debits
+              {t.debitsFilter}
             </button>
           </div>
         </div>

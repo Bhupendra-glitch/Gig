@@ -106,26 +106,81 @@ Format your response as structured JSON with the following schema:
 
     if (!ai) {
       // Graceful fallback if GEMINI_API_KEY is not yet populated
-      return res.json({
-        summary: language === 'hi' 
-          ? `आपके वर्तमान ₹${profileData?.monthlyInflow?.toLocaleString('en-IN') || '32,000'} मासिक प्रवाह के आधार पर, यह ₹20,000 का ऋण आपकी EMI को 42% FOIR तक ले जाएगा। यह सीमा के करीब है, इसलिए संभलकर निर्णय लें।`
-          : `Based on your monthly cashflow of ₹${profileData?.monthlyInflow?.toLocaleString('en-IN') || '32,000'}, taking this loan increases your debt obligations to 42% of your income. It is within cautious reach if weekend surges remain consistent.`,
-        riskVerdict: 'Caution',
-        keyReasoning: [
-          language === 'hi'
-            ? 'आपकी मासिक EMI ₹10,800 से बढ़कर ₹13,400 हो जाएगी, जिससे बचत केवल 12 दिन की बचेगी।'
-            : 'Monthly EMI burden rises from ₹10,800 to ₹13,400, shrinking your liquid runway to 12 days.',
-          language === 'hi'
-            ? 'महीने के अंत में अचानक खर्च होने पर UPI में बाउंस का खतरा बढ़ सकता है।'
-            : 'Potential risk of micro-bounce during mid-month monsoon or fuel-cost spikes.'
-        ],
-        creditBuildingAction: language === 'hi'
-          ? 'अपने प्राथमिक UPI खाते में कम से कम ₹3,000 का बफर बनाए रखें और BNPL का समय से पहले भुगतान करें।'
-          : 'Maintain at least ₹3,000 minimum rolling balance in your primary payout VPA to establish alternate credit stability.',
-        vernacularAudioText: language === 'hi'
-          ? 'यह लोन लिया जा सकता है लेकिन आपकी बचत पर थोड़ा दबाव आएगा। हमने आपके लिए सुरक्षित योजना तैयार की है।'
-          : 'You can manage this loan with caution, but watch your fuel and weekend platform payouts closely.'
-      });
+      const fallbacks: Record<string, any> = {
+        en: {
+          summary: `Based on your monthly cashflow of ₹${profileData?.monthlyInflow?.toLocaleString('en-IN') || '32,000'}, taking this loan increases your debt obligations to 42% of your income. It is within cautious reach if weekend surges remain consistent.`,
+          riskVerdict: 'Caution',
+          keyReasoning: [
+            'Monthly EMI burden rises from ₹10,800 to ₹13,400, shrinking your liquid runway to 12 days.',
+            'Potential risk of micro-bounce during mid-month fuel-cost spikes or unexpected vehicle maintenance.'
+          ],
+          creditBuildingAction: 'Maintain at least ₹3,000 minimum rolling balance in your primary payout VPA to establish alternate credit stability.',
+          vernacularAudioText: 'You can manage this loan with caution, but watch your fuel and weekend platform payouts closely.'
+        },
+        hi: {
+          summary: `आपके वर्तमान ₹${profileData?.monthlyInflow?.toLocaleString('en-IN') || '32,000'} मासिक प्रवाह के आधार पर, यह ऋण आपकी कुल EMI को 42% FOIR तक ले जाएगा। यह सीमा के करीब है, इसलिए संभलकर निर्णय लें।`,
+          riskVerdict: 'Caution',
+          keyReasoning: [
+            'आपकी मासिक EMI ₹10,800 से बढ़कर ₹13,400 हो जाएगी, जिससे आपातकालीन बचत केवल 12 दिन की बचेगी।',
+            'महीने के अंत में पेट्रोल खर्च या मरम्मत बढ़ने पर UPI में बाउंस का खतरा बढ़ सकता है।'
+          ],
+          creditBuildingAction: 'अपने प्राथमिक UPI खाते में कम से कम ₹3,000 का बफर बनाए रखें और BNPL का समय से पहले भुगतान करें।',
+          vernacularAudioText: 'यह लोन लिया जा सकता है लेकिन आपकी बचत पर थोड़ा दबाव आएगा। हमने आपके लिए सुरक्षित योजना तैयार की है।'
+        },
+        ta: {
+          summary: `உங்கள் மாதாந்திர வருமானமான ₹${profileData?.monthlyInflow?.toLocaleString('en-IN') || '32,000'} அடிப்படையில், இந்த கடன் உங்கள் EMI சுமையை 42% ஆக உயர்த்தும். கவனமாக முடிவெடுக்கவும்.`,
+          riskVerdict: 'Caution',
+          keyReasoning: [
+            'மாதாந்திர EMI ₹10,800 இலிருந்து ₹13,400 ஆக உயர்ந்து, உங்கள் சேமிப்பு காலத்தை 12 நாட்களாகக் குறைக்கும்.',
+            'எரிபொருள் செலவு அல்லது எதிர்பாராத பழுது ஏற்படும் போது UPI பவுன்ஸ் அபாயம் உள்ளது.'
+          ],
+          creditBuildingAction: 'உங்கள் முதன்மை UPI கணக்கில் குறைந்தது ₹3,000 இருப்பை பராமரிக்கவும்.',
+          vernacularAudioText: 'இந்த கடனை எச்சரிக்கையுடன் நிர்வகிக்கலாம். வார இறுதி வருமானத்தை தொடர்ந்து கண்காணிக்கவும்.'
+        },
+        te: {
+          summary: `మీ ప్రస్తుత నెలవారీ ఆదాయం ₹${profileData?.monthlyInflow?.toLocaleString('en-IN') || '32,000'} ఆధారంగా, ఈ రుణం మీ EMI భారాన్ని 42% కి పెంచుతుంది. జాగ్రత్తగా నిర్ణయం తీసుకోండి.`,
+          riskVerdict: 'Caution',
+          keyReasoning: [
+            'నెలవారీ EMI ₹10,800 నుండి ₹13,400 కి పెరుగుతుంది, దీని వలన మీ సేవింగ్స్ 12 రోజులకు మాత్రమే సరిపోతాయి.',
+            'పెట్రోల్ ఖర్చులు లేదా వాహన మరమ్మతులు పెరిగినప్పుడు చెల్లింపులు తప్పే ప్రమాదం ఉంది.'
+          ],
+          creditBuildingAction: 'మీ ప్రైమరీ UPI ఖాతాలో కనీసం ₹3,000 బ్యాలెన్స్ ఉంచడం ద్వారా క్రెడిట్ స్కోర్ పెంచుకోండి.',
+          vernacularAudioText: 'ఈ లోన్ తీసుకోవచ్చు కానీ జాగ్రత్త అవసరం. మీ వారాంతపు ప్లాట్‌ఫారమ్ చెల్లింపులను గమనించండి.'
+        },
+        bn: {
+          summary: `আপনার মাসিক ₹${profileData?.monthlyInflow?.toLocaleString('en-IN') || '32,000'} উপার্জনের ওপর ভিত্তি করে, এই ঋণ আপনার EMI বোঝা ৪২% পর্যন্ত বাড়িয়ে দেবে। সাবধানে সিদ্ধান্ত নিন।`,
+          riskVerdict: 'Caution',
+          keyReasoning: [
+            'মাসিক EMI ₹১০,৮০০ থেকে বেড়ে ₹১৩,৪০০ হবে, যার ফলে সঞ্চয় মাত্র ১২ দিনের থাকবে।',
+            'মাসের শেষে পেট্রোল খরচ বা জরুরি মেরামতের সময় UPI বাউন্সের ঝুঁকি বাড়তে পারে।'
+          ],
+          creditBuildingAction: 'আপনার প্রাথমিক UPI অ্যাকাউন্টে কমপক্ষে ₹৩,০০০ ব্যালেন্স বজায় রাখুন।',
+          vernacularAudioText: 'এই ঋণটি নেওয়া যেতে পারে তবে আপনার সঞ্চয়ের ওপর চাপ আসবে। সাবধানে ব্যয় করুন।'
+        },
+        mr: {
+          summary: `तुमच्या मासिक ₹${profileData?.monthlyInflow?.toLocaleString('en-IN') || '32,000'} उत्पन्नाच्या आधारे, हे कर्ज तुमची EMI 42% FOIR पर्यंत वाढवेल. विचारपूर्वक निर्णय घ्या.`,
+          riskVerdict: 'Caution',
+          keyReasoning: [
+            'तुमची मासिक EMI ₹10,800 वरून ₹13,400 होईल, ज्यामुळे बचत केवळ 12 दिवसांची उरेल.',
+            'इंधन खर्च किंवा अनपेक्षित दुरुस्ती उद्भवल्यास खात्यात बाऊन्स होण्याचा धोका वाढू शकतो.'
+          ],
+          creditBuildingAction: 'तुमच्या मुख्य UPI खात्यात किमान ₹3,000 चा राखीव निधी ठेवा.',
+          vernacularAudioText: 'हे कर्ज काळजीपूर्वक फेडता येईल, परंतु तुमच्या इंधन आणि वीकेंड कमाईवर लक्ष ठेवा.'
+        },
+        kn: {
+          summary: `ನಿಮ್ಮ ಮಾಸಿಕ ₹${profileData?.monthlyInflow?.toLocaleString('en-IN') || '32,000'} ಆದಾಯದ ಆಧಾರದ ಮೇಲೆ, ಈ ಸಾಲವು ನಿಮ್ಮ EMI ಹೊರೆಯನ್ನು 42% ಗೆ ಹೆಚ್ಚಿಸುತ್ತದೆ. ಎಚ್ಚರಿಕೆಯಿಂದ ನಿರ್ಧಾರ ತೆಗೆದುಕೊಳ್ಳಿ.`,
+          riskVerdict: 'Caution',
+          keyReasoning: [
+            'ಮಾಸಿಕ EMI ₹10,800 ರಿಂದ ₹13,400 ಕ್ಕೆ ಏರಿಕೆಯಾಗುತ್ತದೆ, ಉಳಿತಾಯವು 12 ದಿನಗಳಿಗೆ ಮಾತ್ರ ಸೀಮಿತವಾಗುತ್ತದೆ.',
+            'ಇಂಧನ ವೆಚ್ಚ ಹೆಚ್ಚಳ ಅಥವಾ ತುರ್ತು ದುರಸ್ತಿ ಸಂದರ್ಭದಲ್ಲಿ UPI ಬೌನ್ಸ್ ಆಗುವ ಅಪಾಯವಿದೆ.'
+          ],
+          creditBuildingAction: 'ನಿಮ್ಮ ಪ್ರಾಥಮಿಕ UPI ಖಾತೆಯಲ್ಲಿ ಕನಿಷ್ಠ ₹3,000 ಕಾಯ್ದಿರಿಸಿದ ಮೊತ್ತವನ್ನು ಕಾಪಾಡಿಕೊಳ್ಳಿ.',
+          vernacularAudioText: 'ಈ ಸಾಲವನ್ನು ಎಚ್ಚರಿಕೆಯಿಂದ ನಿಭಾಯಿಸಬಹುದು. ವಾರಾಂತ್ಯದ ಪ್ಲಾಟ್‌ಫಾರ್ಮ್ ಗಳಿಕೆಯನ್ನು ಗಮನಿಸುತ್ತಿರಿ.'
+        }
+      };
+
+      const fallback = fallbacks[language] || fallbacks.en;
+      return res.json(fallback);
     }
 
     const response = await ai.models.generateContent({

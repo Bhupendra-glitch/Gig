@@ -15,9 +15,11 @@ import {
 import {
   GigPersona,
   IncomeTwinVariables,
+  IndianLanguage,
   MonteCarloSimulationResult,
 } from '../types';
 import { calculateEmi } from '../utils/financialCalculations';
+import { getTranslations } from '../utils/translations';
 
 interface IncomeTwinSimulatorProps {
   persona: GigPersona;
@@ -25,6 +27,7 @@ interface IncomeTwinSimulatorProps {
   onUpdateVariables: (vars: IncomeTwinVariables) => void;
   monteCarloResult: MonteCarloSimulationResult;
   onReset: () => void;
+  language?: IndianLanguage;
 }
 
 export const IncomeTwinSimulator: React.FC<IncomeTwinSimulatorProps> = ({
@@ -33,7 +36,9 @@ export const IncomeTwinSimulator: React.FC<IncomeTwinSimulatorProps> = ({
   onUpdateVariables,
   monteCarloResult,
   onReset,
+  language = 'en',
 }) => {
+  const t = getTranslations(language);
   const currentTotalEmi = persona.existingLoans.reduce((sum, l) => sum + l.monthlyEmi, 0);
   const currentFoir = Math.round((currentTotalEmi / persona.monthlyAverageInflow) * 100);
 
@@ -88,14 +93,14 @@ export const IncomeTwinSimulator: React.FC<IncomeTwinSimulatorProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-extrabold text-slate-900 font-display">
-                  The Income Twin™ Digital Simulation Sandbox
+                  {t.twinTitle}
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
                   Interactive Lab
                 </span>
               </div>
               <p className="text-xs text-slate-500">
-                Simulate loans, income drops, and emergency expenses to see your future cashflow before borrowing.
+                {t.twinSubtitle}
               </p>
             </div>
           </div>
@@ -107,7 +112,7 @@ export const IncomeTwinSimulator: React.FC<IncomeTwinSimulatorProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            Reset to Baseline
+            {t.resetSim}
           </button>
         )}
       </div>
@@ -119,7 +124,7 @@ export const IncomeTwinSimulator: React.FC<IncomeTwinSimulatorProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
               <Sliders className="w-4 h-4 text-indigo-600" />
-              Scenario Control Levers
+              {t.simActiveBadge}
             </span>
             <span className="text-[11px] text-slate-500">Real-time Amortization &amp; FOIR</span>
           </div>
@@ -128,7 +133,7 @@ export const IncomeTwinSimulator: React.FC<IncomeTwinSimulatorProps> = ({
           <div className="space-y-2 bg-white p-3.5 rounded-xl border border-slate-200/60 shadow-2xs">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800">
-                Simulate New Loan Principal
+                {t.newLoanPrincipal}
               </label>
               <span className="text-sm font-mono font-bold text-indigo-700">
                 ₹{variables.newLoanPrincipal.toLocaleString('en-IN')}
@@ -173,8 +178,8 @@ export const IncomeTwinSimulator: React.FC<IncomeTwinSimulatorProps> = ({
             <div className="grid grid-cols-2 gap-3 bg-white p-3.5 rounded-xl border border-slate-200/60 shadow-2xs animate-in fade-in duration-150">
               <div>
                 <div className="flex justify-between text-xs font-medium text-slate-700 mb-1">
-                  <span>Tenure:</span>
-                  <span className="font-bold text-slate-900">{variables.newLoanTenureMonths} Mos</span>
+                  <span>{t.loanTenure}:</span>
+                  <span className="font-bold text-slate-900">{variables.newLoanTenureMonths} {t.months}</span>
                 </div>
                 <input
                   type="range"
@@ -194,7 +199,7 @@ export const IncomeTwinSimulator: React.FC<IncomeTwinSimulatorProps> = ({
 
               <div>
                 <div className="flex justify-between text-xs font-medium text-slate-700 mb-1">
-                  <span>Annual APR:</span>
+                  <span>{t.annualInterestRate}:</span>
                   <span className="font-bold text-slate-900">{variables.newLoanAnnualRate}%</span>
                 </div>
                 <input
@@ -226,7 +231,7 @@ export const IncomeTwinSimulator: React.FC<IncomeTwinSimulatorProps> = ({
           <div className="space-y-2 bg-white p-3.5 rounded-xl border border-slate-200/60 shadow-2xs">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800">
-                Income Shock / Fluctuation
+                {t.incomeShock}
               </label>
               <span
                 className={`text-xs font-mono font-bold px-2 py-0.5 rounded-md ${
@@ -284,7 +289,7 @@ export const IncomeTwinSimulator: React.FC<IncomeTwinSimulatorProps> = ({
               <div className="flex items-center justify-between">
                 <span className="font-bold flex items-center gap-1">
                   <Zap className="w-3.5 h-3.5 text-orange-600" />
-                  Emergency Expense
+                  {t.emergencyExpense}
                 </span>
                 <span className="font-mono text-[11px]">₹12,000</span>
               </div>
@@ -312,7 +317,7 @@ export const IncomeTwinSimulator: React.FC<IncomeTwinSimulatorProps> = ({
               <div className="flex items-center justify-between">
                 <span className="font-bold flex items-center gap-1">
                   <ShieldAlert className="w-3.5 h-3.5 text-indigo-600" />
-                  Concurrent 2nd Loan
+                  {t.enableSecondLoan}
                 </span>
                 <span className="font-mono text-[11px]">+₹15k</span>
               </div>

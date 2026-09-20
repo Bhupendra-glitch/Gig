@@ -20,6 +20,7 @@ import {
   IndianLanguage,
   VernacularAssistantResponse,
 } from '../types';
+import { getTranslations, LANGUAGE_OPTIONS } from '../utils/translations';
 
 interface VernacularAssistantProps {
   persona: GigPersona;
@@ -37,6 +38,63 @@ interface Message {
   timestamp: string;
 }
 
+const getWelcomeMessage = (lang: IndianLanguage, personaName: string): string => {
+  switch (lang) {
+    case 'hi':
+      return `नमस्ते ${personaName}! मैं आपका GigCred AI वित्तीय सलाहकार हूँ। आप मुझसे बोलकर या लिखकर पूछ सकते हैं कि क्या आप नया लोन ले सकते हैं, EMI कैसे कम करें, या आय में उतार-चढ़ाव से कैसे निपटें।`;
+    case 'ta':
+      return `வணக்கம் ${personaName}! நான் உங்கள் GigCred AI நிதி வழிகாட்டி. புதிய கடன் பாதுகாப்பு, EMI மேலாண்மை அல்லது கிரெடிட் மேம்பாடு பற்றி என்னிடம் தமிழில் கேட்கலாம்.`;
+    case 'te':
+      return `నమస్కారం ${personaName}! నేను మీ GigCred AI ఫైనాన్షియల్ మెంటార్‌ని. కొత్త లోన్ భద్రత, EMI నిర్వహణ లేదా క్రెడిట్ స్కోర్ మెరుగుదల గురించి నాతో తెలుగులో మాట్లాడవచ్చు.`;
+    case 'bn':
+      return `নমস্কার ${personaName}! আমি আপনার GigCred AI আর্থিক পরামর্শদাতা। নতুন ঋণ, EMI বা ক্রেডিট স্কোর উন্নতির বিষয়ে বাংলায় যেকোনো প্রশ্ন জিজ্ঞাসা করতে পারেন।`;
+    case 'mr':
+      return `नमस्कार ${personaName}! मी तुमचा GigCred AI आर्थिक मार्गदर्शक आहे. तुम्ही मराठीत नवीन कर्ज, EMI किंवा क्रेडिट स्कोअर सुधारण्याबाबत विचारू शकता.`;
+    case 'kn':
+      return `ನಮಸ್ಕಾರ ${personaName}! ನಾನು ನಿಮ್ಮ GigCred AI ಹಣಕಾಸು ಮಾರ್ಗದರ್ಶಿ. ಹೊಸ ಸಾಲ, EMI ಅಥವಾ ಕ್ರೆಡಿಟ್ ಸ್ಕೋರ್ ಸುಧಾರಣೆ ಬಗ್ಗೆ ಕನ್ನಡದಲ್ಲಿ ನನ್ನನ್ನು ಕೇಳಬಹುದು.`;
+    default:
+      return `Hello ${personaName}! I am your GigCred AI Financial Mentor. You can ask me questions via voice or text in your native language about loan safety, EMI affordability, or your credit roadmap.`;
+  }
+};
+
+const getInputPlaceholder = (lang: IndianLanguage): string => {
+  switch (lang) {
+    case 'hi':
+      return 'यहाँ हिन्दी में पूछें (उदा. क्या मैं ₹20,000 का लोन ले सकता हूँ?)...';
+    case 'ta':
+      return 'தமிழில் கேளுங்கள் (எ.கா. நான் ₹20,000 கடன் வாங்கலாமா?)...';
+    case 'te':
+      return 'తెలుగులో అడగండి (ఉదా. నేను ₹20,000 రుణం తీసుకోవచ్చా?)...';
+    case 'bn':
+      return 'এখানে বাংলায় জিজ্ঞাসা করুন (উদা. আমি কি ২০,০০০ টাকার ঋণ নিতে পারি?)...';
+    case 'mr':
+      return 'येथे मराठीत विचारा (उदा. मी ₹२०,००० चे कर्ज घेऊ शकेन का?)...';
+    case 'kn':
+      return 'ಕನ್ನಡದಲ್ಲಿ ಕೇಳಿ (ಉದಾ. ನಾನು ₹20,000 ಸಾಲ ಪಡೆಯಬಹುದೇ?)...';
+    default:
+      return 'Ask a financial question in English or click the mic to speak...';
+  }
+};
+
+const getFallbackMessage = (lang: IndianLanguage): string => {
+  switch (lang) {
+    case 'hi':
+      return 'आपके वर्तमान वित्तीय डेटा के अनुसार, यह लोन लेने से पहले सुनिश्चित करें कि आपकी कुल मासिक ईएमआई आय के 35% से कम रहे।';
+    case 'ta':
+      return 'உங்கள் தற்போதைய பணப்புழக்கத்தின்படி, இந்த கடனை வாங்குவதற்கு முன் உங்கள் மாதாந்திர EMI 35% க்கும் குறைவாக இருப்பதை உறுதிப்படுத்தவும்.';
+    case 'te':
+      return 'మీ ప్రస్తుత ఆర్థిక డేటా ప్రకారం, ఈ రుణం తీసుకునే ముందు మీ నెలవారీ EMI ఆదాయంలో 35% కంటే తక్కువగా ఉండేలా చూసుకోండి.';
+    case 'bn':
+      return 'আপনার বর্তমান আর্থিক তথ্য অনুযায়ী, এই ঋণ নেওয়ার আগে নিশ্চিত করুন যে আপনার মাসিক EMI উপার্জনের ৩৫% এর নিচে থাকে।';
+    case 'mr':
+      return 'तुमच्या सध्याच्या आर्थिक स्थितीनुसार, हे कर्ज घेण्यापूर्वी तुमची एकूण मासिक EMI उत्पन्नाच्या 35% पेक्षा कमी असल्याची खात्री करा.';
+    case 'kn':
+      return 'ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಆರ್ಥಿಕ ಡೇಟಾದ ಪ್ರಕಾರ, ಈ ಸಾಲ ಪಡೆಯುವ ಮೊದಲು ನಿಮ್ಮ ಮಾಸಿಕ EMI ಆದಾಯದ 35% ಗಿಂತ ಕಡಿಮೆಯಿರುವುದನ್ನು ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ.';
+    default:
+      return 'Based on your cashflow, taking this loan increases your debt obligations. Ensure your total EMI stays below 35% FOIR.';
+  }
+};
+
 export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
   persona,
   selectedLanguage,
@@ -44,17 +102,33 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
   simulationVariables,
   currentCashflowScore,
 }) => {
+  const t = getTranslations(selectedLanguage);
+
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: 'welcome-1',
+      id: `welcome-${selectedLanguage}`,
       sender: 'assistant',
-      text:
-        selectedLanguage === 'hi'
-          ? `नमस्ते ${persona.name}! मैं आपका GigCred AI वित्तीय सलाहकार हूँ। आप मुझसे बोलकर या लिखकर पूछ सकते हैं कि क्या आप नया लोन ले सकते हैं, EMI कैसे कम करें, या आय में उतार-चढ़ाव से कैसे निपटें।`
-          : `Hello ${persona.name}! I am your GigCred AI Financial Mentor. You can ask me questions via voice or text in your native language about loan safety, EMI affordability, or your credit roadmap.`,
+      text: getWelcomeMessage(selectedLanguage, persona.name),
       timestamp: 'Just now',
     },
   ]);
+
+  // Synchronize welcome message whenever language or persona changes
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length <= 1) {
+        return [
+          {
+            id: `welcome-${selectedLanguage}-${persona.id}`,
+            sender: 'assistant',
+            text: getWelcomeMessage(selectedLanguage, persona.name),
+            timestamp: 'Just now',
+          },
+        ];
+      }
+      return prev;
+    });
+  }, [selectedLanguage, persona.id, persona.name]);
 
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -260,10 +334,7 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
       const fallbackMsg: Message = {
         id: `bot-${Date.now()}`,
         sender: 'assistant',
-        text:
-          selectedLanguage === 'hi'
-            ? 'आपके वर्तमान वित्तीय डेटा के अनुसार, यह ₹20,000 का लोन लेने से पहले सुनिश्चित करें कि आपकी मासिक ईएमआई आय के 35% से कम रहे।'
-            : 'Based on your cashflow, taking this loan increases your debt obligations. Ensure your EMI stays below 35% FOIR.',
+        text: getFallbackMessage(selectedLanguage),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, fallbackMsg]);
@@ -284,14 +355,14 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-slate-900 font-display">
-                  Vernacular AI Financial Assistant
+                  {t.assistantTitle}
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                   Gemini 3.8 &bull; Voice Enabled
                 </span>
               </div>
               <p className="text-xs text-slate-500">
-                Ask questions in Hindi, Tamil, Telugu, and 4 other Indian languages using voice or text.
+                {t.assistantSubtitle}
               </p>
             </div>
           </div>
@@ -299,29 +370,17 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
 
         {/* Vernacular Language Badges */}
         <div className="flex flex-wrap items-center gap-1 text-xs">
-          {(['en', 'hi', 'ta', 'te', 'bn', 'mr', 'kn'] as IndianLanguage[]).map((l) => (
+          {LANGUAGE_OPTIONS.map((l) => (
             <button
-              key={l}
-              onClick={() => onLanguageChange(l)}
+              key={l.code}
+              onClick={() => onLanguageChange(l.code)}
               className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                selectedLanguage === l
+                selectedLanguage === l.code
                   ? 'bg-emerald-600 text-white font-bold shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              {l === 'en'
-                ? 'English'
-                : l === 'hi'
-                ? 'हिन्दी'
-                : l === 'ta'
-                ? 'தமிழ்'
-                : l === 'te'
-                ? 'తెలుగు'
-                : l === 'bn'
-                ? 'বাংলা'
-                : l === 'mr'
-                ? 'मराठी'
-                : 'ಕನ್ನಡ'}
+              {l.native}
             </button>
           ))}
         </div>
@@ -330,7 +389,7 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
       {/* Suggestion Prompts Chips */}
       <div className="space-y-1.5">
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
-          Quick Question Prompts ({selectedLanguage.toUpperCase()}):
+          {t.quickPromptsLabel}:
         </span>
         <div className="flex flex-wrap gap-2">
           {(promptSuggestions[selectedLanguage] || promptSuggestions.en).map((suggestion, idx) => (
@@ -404,7 +463,7 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
                         ) : (
                           <Volume2 className="w-3.5 h-3.5 text-emerald-600" />
                         )}
-                        <span>Listen Audio</span>
+                        <span>{isPlayingAudio ? t.stopAudio : t.listenAudio}</span>
                       </button>
                     )}
                   </div>
@@ -412,7 +471,7 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
                   {msg.responseObj.keyReasoning && msg.responseObj.keyReasoning.length > 0 && (
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                        Key Mathematical Factors:
+                        {t.keyReasoning}:
                       </span>
                       {msg.responseObj.keyReasoning.map((reason, i) => (
                         <div key={i} className="flex items-start gap-1.5 text-[11px] text-slate-600">
@@ -427,7 +486,7 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
                     <div className="bg-emerald-50/80 p-2.5 rounded-lg border border-emerald-200/80 text-[11px] text-emerald-900 flex items-start gap-1.5">
                       <Compass className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                       <div>
-                        <span className="font-bold block">Credit-Building Roadmap Step:</span>
+                        <span className="font-bold block">{t.actionRoadmap}:</span>
                         <span>{msg.responseObj.creditBuildingAction}</span>
                       </div>
                     </div>
@@ -477,11 +536,7 @@ export const VernacularAssistant: React.FC<VernacularAssistantProps> = ({
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder={
-            selectedLanguage === 'hi'
-              ? 'यहाँ पूछें (उदा. क्या मैं ₹20,000 का लोन ले सकता हूँ?)...'
-              : 'Ask a financial question in your language or click the mic...'
-          }
+          placeholder={getInputPlaceholder(selectedLanguage)}
           className="flex-1 bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
         />
 
