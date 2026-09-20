@@ -1,0 +1,6 @@
+{
+  "name": "GigCred",
+  "description": "AI-powered financial intelligence, explainable cashflow credit scoring, and Income Twin simulation platform for gig workers and freelancers.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
